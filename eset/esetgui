@@ -1,0 +1,3 @@
+#! /bin/bash
+
+[[ -f /opt/eset/esets/bin/esets_gui ]] && exec /opt/eset/esets/bin/esets_gui
