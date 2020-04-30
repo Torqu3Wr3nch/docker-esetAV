@@ -1,0 +1,8 @@
+#! /bin/bash
+
+# If ESETs has been installed (/opt/eset/esets/bin/esets_gui exists), set flag for successful installation.
+
+if [[ -f /opt/eset/esets/bin/esets_gui ]]
+then
+    touch /opt/eset/esets/installed.txt
+fi
