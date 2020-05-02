@@ -1,0 +1,8 @@
+#! /bin/bash
+
+# If ESETs has been installed (the flag /opt/eset/esets/installed.txt exists) and the service isn't running, start the ESET daemon.
+
+if [[ -f /opt/eset/esets/installed.txt ]] && ( !(service esets status > /dev/null) )
+then
+    exec /opt/eset/esets/sbin/esets_daemon
+fi

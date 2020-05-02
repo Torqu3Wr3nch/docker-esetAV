@@ -1,8 +1,0 @@
-#! /bin/bash
-
-# If ESETs has been installed (/etc/init.d/esets exists) and the service isn't running, start the ESET daemon.
-
-if [[ -f /etc/init.d/esets ]] && ( !(service esets status > /dev/null) )
-then
-    exec /etc/init.d/esets start
-fi

@@ -1,2 +1,2 @@
 #! /bin/bash
-[[ ! -f /opt/eset/esets/bin/esets_gui ]] && /eset/eset_nod32av_64bit_en.linux
+[[ ! -f /opt/eset/esets/installed.txt ]] && /eset/eset_nod32av_64bit_en.linux
