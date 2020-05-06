@@ -1,0 +1,21 @@
+#!/bin/bash
+
+accessLog=/tmp/accessLog
+
+inotifywait -m -e CLOSE_WRITE -r --timefmt "%F %T" --format "%T %w" /mnt/monitor \
+        | while read ENTRY
+                do
+                        echo $ENTRY
+                        FILEDIRECTORY=$(echo $ENTRY | sed 's/.*\s//')
+                        echo $FILEDIRECTORY
+                        REGEX="(\/\w+){3}\/"
+                        [[ $FILEDIRECTORY =~ $REGEX ]]
+                        ROOTDIRECTORY=$BASH_REMATCH
+                        TIMESTAMP=$(echo $ENTRY | sed "s~$FILEDIRECTORY~~")
+                        echo $TIMESTAMP
+                        FIXEDENTRY=$TIMESTAMP$ROOTDIRECTORY
+                        echo $FIXEDENTRY
+                        # grep -q $ROOTDIRECTORY $accessLog || echo $FIXEDENTRY >> $accessLog
+                        # sed -i "s~.*$ROOTDIRECTORY~$FIXEDENTRY~g" $accessLog
+                        grep -q $ROOTDIRECTORY $accessLog && sed -i "s~.*$ROOTDIRECTORY~$FIXEDENTRY~g" $accessLog || echo $FIXEDENTRY >> $accessLog
+                done
