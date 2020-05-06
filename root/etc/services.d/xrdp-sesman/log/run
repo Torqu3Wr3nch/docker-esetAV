@@ -1,0 +1,2 @@
+#!/bin/sh
+exec logutil-service /tmp/log/xrdp-sesman

@@ -1,0 +1,5 @@
+#! /bin/bash
+
+[[ ! -d /tmp/log ]] && \
+    mkdir -p /tmp/log/xrdp /tmp/log/xrdp-sesman && \
+    chown nobody:nogroup /tmp/log /tmp/log/xrdp /tmp/log/xrdp-sesman

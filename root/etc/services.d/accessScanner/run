@@ -1,0 +1,23 @@
+#!/bin/bash
+
+accessLog=/tmp/accessLog
+
+if [[ -f /opt/eset/esets/installed.txt ]]
+then
+        while read ENTRY
+                do
+                        FILEDIRECTORY=$(echo $ENTRY | sed 's/.*\s//')
+                        TIMESTAMP=$(echo $ENTRY | sed "s~$FILEDIRECTORY~~")
+                        TIMESTAMP=$(date -d "$TIMESTAMP 2 minutes" +%s)
+                        t=$(date)
+                        t=$(date -d "$t" +%s)
+                        if [ $t -ge $TIMESTAMP ];
+                        then
+                                echo $ENTRY
+                                echo $FILEDIRECTORY
+                                echo $(/opt/eset/esets/sbin/esets_scan $FILEDIRECTORY)
+                                sleep 10
+                                sed -i "\~.*$FILEDIRECTORY~d" $accessLog
+                        fi
+                done < $accessLog
+fi
