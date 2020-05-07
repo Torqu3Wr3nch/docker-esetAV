@@ -1,6 +1,9 @@
 #!/bin/bash
 
-accessLog=/tmp/accessLog
+accessLog=/tmp/esetAV/accessLog
+scanInProgressLog=/tmp/esetAV/scanInProgress
+threatLog=/var/threatLog
+
 
 if [[ -f /opt/eset/esets/installed.txt ]]
 then
@@ -8,16 +11,18 @@ then
                 do
                         FILEDIRECTORY=$(echo $ENTRY | sed 's/.*\s//')
                         TIMESTAMP=$(echo $ENTRY | sed "s~$FILEDIRECTORY~~")
-                        TIMESTAMP=$(date -d "$TIMESTAMP 2 minutes" +%s)
+                        TIMESTAMP=$(date -d "$TIMESTAMP 1 minutes" +%s)
                         t=$(date)
                         t=$(date -d "$t" +%s)
                         if [ $t -ge $TIMESTAMP ];
                         then
-                                echo $ENTRY
-                                echo $FILEDIRECTORY
-                                echo $(/opt/eset/esets/sbin/esets_scan $FILEDIRECTORY)
-                                sleep 10
-                                sed -i "\~.*$FILEDIRECTORY~d" $accessLog
+                                echo $FILEDIRECTORY >> $scanInProgressLog
+                                scanResults=$(/opt/eset/esets/sbin/esets_scan $FILEDIRECTORY)
+                                flock $accessLog -c "sed -i \"\~.*$FILEDIRECTORY~d\" $accessLog"
+                                echo "$scanResults"
+                                echo "$scanResults" | grep -z "threat" >> $threatLog
+                                sleep 1
+                                sed -i "\~.*$FILEDIRECTORY~d" $scanInProgressLog
                         fi
                 done < $accessLog
 fi
