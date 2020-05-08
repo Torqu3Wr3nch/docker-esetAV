@@ -11,7 +11,7 @@ inotifywait -m -e CLOSE_WRITE -r --timefmt "%F %T" --format "%T %w" /mnt/monitor
                         if [[ -z $(awk -v dir="$FILEDIRECTORY" '$0 == substr(dir, 1, length($0))' $scanInProgressLog) ]]; then
                                 # If directory already in the accessLog (or if itself is a superdirectory of a directory that's already in the accessLog), update time stamp.
                                 if grep -q $FILEDIRECTORY $accessLog; then
-                                        flock $accessLog -c "sed -i \"s~.*$FILEDIRECTORY.*~$ENTRY~g\" $accessLog; sort -u $accessLog -o $accessLog" # If we update a bunch of directories to their superdirectory, merge the matches with sort.
+                                        flock -s $accessLog -c "sed -i \"s~.*$FILEDIRECTORY.*~$ENTRY~g\" $accessLog; sort -u $accessLog -o $accessLog" # If we update a bunch of directories to their superdirectory, merge the matches with sort.
                                 else
                                         # If entry is a subdirectory of a directory already on the accessLog, simply update the time stamp.
                                         parentDirectoryLine=$(awk -v dir="$FILEDIRECTORY" 'substr($0,21) == substr(dir, 1, length($0)-20)' $accessLog)
@@ -19,10 +19,10 @@ inotifywait -m -e CLOSE_WRITE -r --timefmt "%F %T" --format "%T %w" /mnt/monitor
                                                 entryTimeStamp=$(echo $ENTRY | sed 's/\s\/.*//')
                                                 directory=$(echo $parentDirectoryLine | sed 's/.*\s//')
                                                 replacementEntry=$entryTimeStamp" "$directory
-                                                flock $accessLog -c "sed -i \"s~$parentDirectoryLine~$replacementEntry~g\" $accessLog"
+                                                flock -s $accessLog -c "sed -i \"s~$parentDirectoryLine~$replacementEntry~g\" $accessLog"
                                         # If we make it this far, we have no record of this directory, add it to the list.
                                         else
-                                                flock $accessLog -c "echo $ENTRY >> $accessLog"
+                                                flock -s $accessLog -c "echo $ENTRY >> $accessLog"
                                         fi
                                 fi
                         fi

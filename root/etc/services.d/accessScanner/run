@@ -8,7 +8,7 @@ scan() {
         echo "Scanning in function on: "$FILEDIRECTORY
         echo $FILEDIRECTORY >> $scanInProgressLog
         scanResults=$(/opt/eset/esets/sbin/esets_scan $FILEDIRECTORY)
-        flock $accessLog -c "sed -i \"\~.*$FILEDIRECTORY~d\" $accessLog"
+        flock -s $accessLog -c "sed -i \"\~.*$FILEDIRECTORY~d\" $accessLog"
         echo "$scanResults"
         echo "$scanResults" | grep -z "threat" >> $threatLog
         sleep 1
