@@ -2,18 +2,18 @@
 
 accessLog=/tmp/esetAV/accessLog
 scanInProgressLog=/tmp/esetAV/scanInProgress
-threatLog=/var/threatLog
+threatLog=/var/log/esets/threatLog
 
 scan() {
         echo "Scanning in function on: "$FILEDIRECTORY
-        echo $FILEDIRECTORY >> $scanInProgressLog
-        scanResults=$(/opt/eset/esets/sbin/esets_scan $FILEDIRECTORY)
+        flock -s $scanInProgressLog -c "echo $FILEDIRECTORY >> $scanInProgressLog"
+        scanResults=$(/opt/eset/esets/sbin/esets_scan "$FILEDIRECTORY")
         FILEDIRECTORY=$(echo $FILEDIRECTORY | sed -e 's/[]\/$*.^[]/\\&/g')
         flock -s $accessLog -c "sed -i \"/.*$FILEDIRECTORY/d\" $accessLog"
         echo "$scanResults"
-        echo "$scanResults" | grep -z "threat" >> $threatLog
+        echo "$scanResults" | grep -z "threat=\"[^\"]" >> $threatLog
         sleep 1
-        sed -i "/.*$FILEDIRECTORY/d" $scanInProgressLog
+        flock -s $scanInProgressLog -c "sed -i \"/.*$FILEDIRECTORY/d\" $scanInProgressLog"
 }
 
 if [[ -f /opt/eset/esets/installed.txt ]]

@@ -10,7 +10,7 @@ inotifywait -m -e CLOSE_WRITE -r --timefmt "%F %T" --format "%T %w" /mnt/monitor
                         # Check if directory is being scanned (including if its superdirectory about to be scanned)
                         if [[ -z $(awk -v dir="$FILEDIRECTORY" '$0 == substr(dir, 1, length($0))' $scanInProgressLog) ]]; then
                                 # If directory already in the accessLog (or if itself is a superdirectory of a directory that's already in the accessLog), update time stamp.
-                                if grep -q -F $FILEDIRECTORY $accessLog; then
+                                if grep -q -F "$FILEDIRECTORY" $accessLog; then
                                         FILEDIRECTORY=$(echo $FILEDIRECTORY | sed -e 's/[]\/$*.^[]/\\&/g')
                                         ENTRY=$(echo $ENTRY | sed -e 's/[\/&]/\\&/g')
                                         flock -s $accessLog -c "sed -i \"s/.*$FILEDIRECTORY.*/$ENTRY/g\" $accessLog; sort -u $accessLog -o $accessLog" # If we update a bunch of directories to their superdirectory, merge the matches with sort.
