@@ -6,20 +6,24 @@ scanInProgressLog=/tmp/esetAV/scanInProgress
 inotifywait -m -e CLOSE_WRITE -r --timefmt "%F %T" --format "%T %w" /mnt/monitor \
         | while read ENTRY
                 do
-                        FILEDIRECTORY=$(echo $ENTRY | sed 's/.*\s//')
+                        FILEDIRECTORY=$(echo $ENTRY | sed 's/[0-9]\{4\}\-[0-9]\{2\}\-[0-9]\{2\}\s[0-9]\{2\}\:[0-9]\{2\}\:[0-9]\{2\}\s//')
                         # Check if directory is being scanned (including if its superdirectory about to be scanned)
                         if [[ -z $(awk -v dir="$FILEDIRECTORY" '$0 == substr(dir, 1, length($0))' $scanInProgressLog) ]]; then
                                 # If directory already in the accessLog (or if itself is a superdirectory of a directory that's already in the accessLog), update time stamp.
-                                if grep -q $FILEDIRECTORY $accessLog; then
-                                        flock -s $accessLog -c "sed -i \"s~.*$FILEDIRECTORY.*~$ENTRY~g\" $accessLog; sort -u $accessLog -o $accessLog" # If we update a bunch of directories to their superdirectory, merge the matches with sort.
+                                if grep -q -F $FILEDIRECTORY $accessLog; then
+                                        FILEDIRECTORY=$(echo $FILEDIRECTORY | sed -e 's/[]\/$*.^[]/\\&/g')
+                                        ENTRY=$(echo $ENTRY | sed -e 's/[\/&]/\\&/g')
+                                        flock -s $accessLog -c "sed -i \"s/.*$FILEDIRECTORY.*/$ENTRY/g\" $accessLog; sort -u $accessLog -o $accessLog" # If we update a bunch of directories to their superdirectory, merge the matches with sort.
                                 else
                                         # If entry is a subdirectory of a directory already on the accessLog, simply update the time stamp.
                                         parentDirectoryLine=$(awk -v dir="$FILEDIRECTORY" 'substr($0,21) == substr(dir, 1, length($0)-20)' $accessLog)
                                         if [[ -n $parentDirectoryLine ]]; then
                                                 entryTimeStamp=$(echo $ENTRY | sed 's/\s\/.*//')
-                                                directory=$(echo $parentDirectoryLine | sed 's/.*\s//')
+                                                directory=$(echo $parentDirectoryLine | sed 's/[0-9]\{4\}\-[0-9]\{2\}\-[0-9]\{2\}\s[0-9]\{2\}\:[0-9]\{2\}\:[0-9]\{2\}\s//')
                                                 replacementEntry=$entryTimeStamp" "$directory
-                                                flock -s $accessLog -c "sed -i \"s~$parentDirectoryLine~$replacementEntry~g\" $accessLog"
+                                                parentDirectoryLine=$(echo $parentDirectoryLine | sed -e 's/[]\/$*.^[]/\\&/g')
+                                                replacementEntry=$(echo $replacementEntry | sed -e 's/[\/&]/\\&/g')
+                                                flock -s $accessLog -c "sed -i \"s/$parentDirectoryLine/$replacementEntry/g\" $accessLog"
                                         # If we make it this far, we have no record of this directory, add it to the list.
                                         else
                                                 flock -s $accessLog -c "echo $ENTRY >> $accessLog"
