@@ -2,7 +2,7 @@
 
 accessLog=/tmp/esetAV/accessLog
 scanInProgressLog=/tmp/esetAV/scanInProgress
-threatLog=/var/esets/threatLog
+threatLog=/var/log/esets/threatLog
 
 scan() {
         echo "Scanning in function on: "$FILEDIRECTORY
