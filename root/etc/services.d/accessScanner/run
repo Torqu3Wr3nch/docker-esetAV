@@ -8,19 +8,20 @@ scan() {
         echo "Scanning in function on: "$FILEDIRECTORY
         echo $FILEDIRECTORY >> $scanInProgressLog
         scanResults=$(/opt/eset/esets/sbin/esets_scan $FILEDIRECTORY)
-        flock -s $accessLog -c "sed -i \"\~.*$FILEDIRECTORY~d\" $accessLog"
+        FILEDIRECTORY=$(echo $FILEDIRECTORY | sed -e 's/[]\/$*.^[]/\\&/g')
+        flock -s $accessLog -c "sed -i \"/.*$FILEDIRECTORY/d\" $accessLog"
         echo "$scanResults"
         echo "$scanResults" | grep -z "threat" >> $threatLog
         sleep 1
-        sed -i "\~.*$FILEDIRECTORY~d" $scanInProgressLog
+        sed -i "/.*$FILEDIRECTORY/d" $scanInProgressLog
 }
 
 if [[ -f /opt/eset/esets/installed.txt ]]
 then
         while read ENTRY
                 do
-                        FILEDIRECTORY=$(echo $ENTRY | sed 's/.*\s//')
-                        TIMESTAMP=$(echo $ENTRY | sed "s~$FILEDIRECTORY~~")
+                        FILEDIRECTORY=$(echo $ENTRY | sed 's/[0-9]\{4\}\-[0-9]\{2\}\-[0-9]\{2\}\s[0-9]\{2\}\:[0-9]\{2\}\:[0-9]\{2\}\s//')
+                        TIMESTAMP=$(echo $ENTRY | sed 's/\s\/.*//')
                         TIMESTAMP=$(date -d "$TIMESTAMP 1 minutes" +%s)
                         t=$(date)
                         t=$(date -d "$t" +%s)
