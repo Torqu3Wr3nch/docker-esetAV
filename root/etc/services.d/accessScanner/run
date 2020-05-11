@@ -5,10 +5,10 @@ scanInProgressLog=/tmp/esetAV/scanInProgress
 threatLog=/var/log/esets/threatLog
 
 scan() {
-        echo "Scanning in function on: "$FILEDIRECTORY
-        flock -s $scanInProgressLog -c "echo $FILEDIRECTORY >> $scanInProgressLog"
+        echo "Scanning in function on: ""$FILEDIRECTORY"
+        flock -s $scanInProgressLog -c "echo \"$FILEDIRECTORY\" >> $scanInProgressLog"
         scanResults=$(/opt/eset/esets/sbin/esets_scan "$FILEDIRECTORY")
-        FILEDIRECTORY=$(echo $FILEDIRECTORY | sed -e 's/[]\/$*.^[]/\\&/g')
+        FILEDIRECTORY=$(echo "$FILEDIRECTORY" | sed -e 's/[]\/$*.^[]/\\&/g')
         flock -s $accessLog -c "sed -i \"/.*$FILEDIRECTORY/d\" $accessLog"
         echo "$scanResults"
         echo "$scanResults" | grep -z "threat=\"[^\"]" >> $threatLog
@@ -20,14 +20,14 @@ if [[ -f /opt/eset/esets/installed.txt ]]
 then
         while read ENTRY
                 do
-                        FILEDIRECTORY=$(echo $ENTRY | sed 's/[0-9]\{4\}\-[0-9]\{2\}\-[0-9]\{2\}\s[0-9]\{2\}\:[0-9]\{2\}\:[0-9]\{2\}\s//')
-                        TIMESTAMP=$(echo $ENTRY | sed 's/\s\/.*//')
+                        FILEDIRECTORY=$(echo "$ENTRY" | sed 's/[0-9]\{4\}\-[0-9]\{2\}\-[0-9]\{2\}\s[0-9]\{2\}\:[0-9]\{2\}\:[0-9]\{2\}\s//')
+                        TIMESTAMP=$(echo "$ENTRY" | sed 's/\s\/.*//')
                         TIMESTAMP=$(date -d "$TIMESTAMP 1 minutes" +%s)
                         t=$(date)
                         t=$(date -d "$t" +%s)
                         if [ $t -ge $TIMESTAMP ] && [[ -z $(awk -v dir="$FILEDIRECTORY" '$0 == substr(dir, 1, length($0))' $scanInProgressLog) ]];
                         then
-                                echo "Starting scan on: "$FILEDIRECTORY
+                                echo "Starting scan on: ""$FILEDIRECTORY"
                                 scan &
                         fi
                 done < $accessLog
